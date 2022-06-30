@@ -16,3 +16,7 @@ The backend is a Web API service that all other services interact with to functi
 
 - Run `prisma migrate reset` to reset development database
 - Run `yarn prisma studio` to launch Prisma Visual DB viewer
+
+### Prisma DB dev commands
+
+- Run `npx prisma migrate dev --name <name>` if a change to schema has been done and it neesd to be captured for a migration
