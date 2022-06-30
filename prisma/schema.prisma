@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ******************************************************************************************
+// 
+//        Define the Menu and the items that can be ordered by customers
+// 
+// ******************************************************************************************
+
+// Defines a Menu like Breakfast, Lunch, or Dinner
+model Menu {
+  id              Int             @id @default(autoincrement())
+  name            String          @db.VarChar(255)
+  description     String?
+  active          Boolean         @default(false)                 // Is the menu active, only 1 menu can be active at a time
+  items           MenuItem[]
+}
+
+// An Item on the Menu that can be ordered
+// A Menu Item can be on multiple Menus
+// Example: Cheeseburger Combo, Hotdog
+// Relation: A Menu has Menu Item(s)
+model MenuItem {
+  id              Int             @id @default(autoincrement())
+  menus           Menu[]                                          // Relation to Menu Item
+  name            String          @db.VarChar(255)
+  description     String?
+  available       Boolean         @default(true)                  // Is the item available to be ordered?
+  price           Decimal         @db.Money                       // Price of the Item
+  category        String?                                         // Category of the Item (Sandwiches, Sides, Drinks)
+  tags            String[]                                        // Misc tags of the Item; useful for Searching (For example, a Cheeseburger may be tagged wiht: burgers, cheeseburger, Sandwiches, beef)
+  foods           Food[]
+}
+
+// The basic element in everything is a Food
+// Food(s) are in an Menu Item
+// A Food can be a part of multiple Menu Items
+// Example: Cheeseburger, Fries, Soda
+// The Menu Item "Cheeseburger combo" -> Cheeseburger, Fries, Soda
+// The Menu Item "Hotdog" -> Hotdog
+model Food {
+  id              Int             @id @default(autoincrement())
+  menuItems       MenuItem[]                                      // Relation to Menu Item
+  name            String          @db.VarChar(255)
+  description     String?
+  available       Boolean         @default(true)                  // Is the item available to be ordered?
+  price           Decimal         @db.Money                       // Price of the Food item (a-la-cart)
+  category        String?                                         // Category of the Food (Sandwiches, Sides, Drinks)
+  tags            String[]                                        // Misc tags of the Food; useful for Searching (For example, a Cheeseburger may be tagged wiht: burgers, cheeseburger, Sandwiches, beef)
+  options         Option[]                                        // Options avaialble for food item
+  foodOpts        OptionFood[]                                    // What other Foods are options for this Food
+}
+
+// Options for a Food
+// Parent Relation: A Food may have Option(s)
+// Options can be the addition of another Food (like toppings or sauces) or either be a Preparation instruction (like sauce on the side)
+// Example: Cheeseburger has an Option for "Toppings" - FoodOpts define: Lettuce, Tomato, Pickels, Bacon, Ketchup, Mustard; Multiple can be selected or none can be selected
+// Example: Chicken sandwhich has an option for "Sauces" - FoodOpts define: BBQ, Spicy
+// Example: Wings have an option for "Sauce Application" - Preparation define: Sauce on the Side, Tossed in Sauce
+  // This is a text option 
+model Option {
+  id              Int             @id @default(autoincrement())
+  food            Food            @relation(fields: [foodId], references: [id]) // Which food is this option to?
+  foodId          Int
+  name            String          @db.VarChar(255)                              // Name of the option: (Topping(s), Sauce(s))
+  multiselect     Boolean         @default(true)                                // Can you select multiple options at once?
+  multiOrder      Boolean         @default(true)                                // Can you order multiple of the same option?
+  freeQty         Int                                                           // How many options (if multiselect/multiOrder) are free
+  prepOpts        OptionPrep[]                                                  // List of Preparation options
+  foodOpts        OptionFood[]                                                  // List of other Food options
+}
+
+// Options for a Food that are another Food
+// Example: Cheeseburger has an Option for "Toppings": Lettuce, Tomato, Pickels, Bacon, Ketchup, Mustard; Multiple can be selected or none can be selected
+// Example: Chicken sandwhich has an option for "Sauces": BBQ, Spicy
+model OptionFood {
+  option          Option          @relation(fields: [optionId], references: [id]) // Which Option is this FoodOption to
+  optionId        Int
+  food            Food            @relation(fields: [foodId], references: [id])   // Which Food does this Option provide
+  foodId          Int
+  price           Decimal?         @db.Money                                      // Override of Food price
+  @@id([optionId, foodId])
+}
+
+// Preparation instructions for Options
+// For example the Sauce Instruction option could be: Tossed in Sauce, On the side
+model OptionPrep {
+  id              Int             @id @default(autoincrement())
+  option          Option          @relation(fields: [optionId], references: [id]) // Which Option is this text option to
+  optionId        Int
+  name            String          @db.VarChar(255)                                // Name of text text Option: Tossed in Sauce, On the side
+  price           Decimal?        @db.Money                                       // Price of the option
+}
