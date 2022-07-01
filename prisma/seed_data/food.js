@@ -20,7 +20,7 @@ const foods = [
     name: 'Thigh Bites',
     description:
       'Korea Fried Chicken "Nuggets" - Chunks of juicy Korean Fried Chicken Thigh',
-    available: true,
+    available: false,
     price: '4',
     category: 'Mains',
     tags: [],
@@ -175,7 +175,7 @@ const foods = [
     id: 12,
     name: 'Buffalo',
     description: 'describe it here',
-    available: true,
+    available: false,
     price: '0.25',
     category: 'Sauces',
     tags: [],
