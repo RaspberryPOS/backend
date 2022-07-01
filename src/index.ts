@@ -1,11 +1,22 @@
 import { PrismaClient } from '@prisma/client'
 import express from 'express'
+import cors from 'cors'
 require('dotenv').config()
 
 const prisma = new PrismaClient()
 const app = express()
+var env = process.env.NODE_ENV
 
 app.use(express.json())
+
+if (process.env.NODE_ENV === 'development') {
+  console.log(`🛠️  DEVELOPMENT Mode detected, enabled CORS policy *`)
+  app.use(
+    cors({
+      origin: '*',
+    })
+  )
+}
 
 // ------------------------------------------------
 // Menu record APIs
