@@ -37,8 +37,13 @@ app.get('/menuItem', async (req, res) => {
     where: {},
     include: {
       foods: {
-        select: {
-          id: true,
+        include: {
+          options: {
+            include: {
+              prepOpts: true,
+              foodOpts: true,
+            },
+          },
         },
       },
       menus: {
