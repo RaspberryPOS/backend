@@ -50,7 +50,7 @@ app.get('/menuItem', async (req, res) => {
   }
   // Check if menuId provided and filter to selected menu
   let menuId = req.query['menuId'] as string
-  if (menuId) {
+  if (menuId && parseInt(menuId)) {
     query['where'] = {
       menus: {
         some: {
