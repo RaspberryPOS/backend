@@ -27,7 +27,7 @@ const foods = [
     menuItems: {
       connect: [
         {
-          id: 1,
+          id: 2,
         },
       ],
     },
