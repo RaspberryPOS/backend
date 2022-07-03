@@ -86,12 +86,7 @@ app.get('/food', async (req, res) => {
       options: {
         include: {
           prepOpts: true,
-          foodOpts: {
-            select: {
-              foodId: true,
-              price: true,
-            },
-          },
+          foodOpts: true,
         },
       },
     },
@@ -110,12 +105,7 @@ app.get('/food/:foodId', async (req, res) => {
       options: {
         include: {
           prepOpts: true,
-          foodOpts: {
-            select: {
-              foodId: true,
-              price: true,
-            },
-          },
+          foodOpts: true,
         },
       },
     },

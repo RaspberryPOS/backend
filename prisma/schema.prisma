@@ -87,7 +87,9 @@ model OptionFood {
   optionId        Int
   food            Food            @relation(fields: [foodId], references: [id])   // Which Food does this Option provide
   foodId          Int
-  price           Decimal?         @db.Money                                      // Override of Food price
+  price           Decimal?        @db.Money                                       // Override of Food price
+  selected        Boolean         @default(false)                                 // Is the option selected (for order)?
+  quantity        Int             @default(0)                                     // How many of the option is selected (for order)?
   @@id([optionId, foodId])
 }
 
@@ -99,4 +101,6 @@ model OptionPrep {
   optionId        Int
   name            String          @db.VarChar(255)                                // Name of text text Option: Tossed in Sauce, On the side
   price           Decimal?        @db.Money                                       // Price of the option
+  selected        Boolean         @default(false)                                 // Is the option selected (for order)?
+  quantity        Int             @default(0)                                     // How many of the option is selected (for order)?
 }
