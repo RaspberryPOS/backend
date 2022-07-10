@@ -9,26 +9,32 @@ const options = [
     foodOpts: {
       create: [
         {
+          id: 1,
           foodId: 10,
           price: null,
         },
         {
+          id: 2,
           foodId: 11,
           price: null,
         },
         {
+          id: 3,
           foodId: 12,
           price: null,
         },
         {
+          id: 4,
           foodId: 13,
           price: null,
         },
         {
+          id: 5,
           foodId: 14,
           price: null,
         },
         {
+          id: 6,
           foodId: 15,
           price: null,
         },
@@ -45,26 +51,32 @@ const options = [
     foodOpts: {
       create: [
         {
+          id: 7,
           foodId: 10,
           price: null,
         },
         {
+          id: 8,
           foodId: 11,
           price: null,
         },
         {
+          id: 9,
           foodId: 12,
           price: null,
         },
         {
+          id: 10,
           foodId: 13,
           price: null,
         },
         {
+          id: 11,
           foodId: 14,
           price: null,
         },
         {
+          id: 12,
           foodId: 15,
           price: null,
         },
@@ -81,10 +93,12 @@ const options = [
     foodOpts: {
       create: [
         {
+          id: 13,
           foodId: 16,
           price: null,
         },
         {
+          id: 14,
           foodId: 17,
           price: null,
         },
@@ -101,10 +115,12 @@ const options = [
     foodOpts: {
       create: [
         {
+          id: 15,
           foodId: 18,
           price: null,
         },
         {
+          id: 16,
           foodId: 19,
           price: null,
         },
@@ -121,14 +137,17 @@ const options = [
     foodOpts: {
       create: [
         {
+          id: 17,
           foodId: 18,
           price: null,
         },
         {
+          id: 18,
           foodId: 19,
           price: null,
         },
         {
+          id: 19,
           foodId: 20,
           price: null,
         },

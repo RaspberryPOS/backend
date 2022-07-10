@@ -31,14 +31,15 @@ model Menu {
 // Relation: A Menu has Menu Item(s)
 model MenuItem {
   id              Int             @id @default(autoincrement())
-  menus           Menu[]                                          // Relation to Menu Item
-  name            String          @db.VarChar(255)
-  description     String?
+  name            String          @db.VarChar(255)                // Name of the Menu Item
+  description     String?                                         // Description of the Menu Item
   available       Boolean         @default(true)                  // Is the item available to be ordered?
   price           Decimal         @db.Money                       // Price of the Item
   category        String?                                         // Category of the Item (Sandwiches, Sides, Drinks)
   tags            String[]                                        // Misc tags of the Item; useful for Searching (For example, a Cheeseburger may be tagged wiht: burgers, cheeseburger, Sandwiches, beef)
-  foods           Food[]
+  menus           Menu[]                                          // What Menu(s) is this MenuItem part of?
+  foods           Food[]                                          // What Food(s) make up the MenuItem
+  orderItems      OrderItem[]                                     // Relation if this MenuItem is part of an Order
 }
 
 // The basic element in everything is a Food
@@ -49,15 +50,17 @@ model MenuItem {
 // The Menu Item "Hotdog" -> Hotdog
 model Food {
   id              Int             @id @default(autoincrement())
-  menuItems       MenuItem[]                                      // Relation to Menu Item
-  name            String          @db.VarChar(255)
-  description     String?
+  name            String          @db.VarChar(255)                // Name of the Food
+  description     String?                                         // Description of the Food
   available       Boolean         @default(true)                  // Is the item available to be ordered?
+  mustBeFired     Boolean         @default(false)                 // Does the Food need to be cooked/fired before being plated
   price           Decimal         @db.Money                       // Price of the Food item (a-la-cart)
   category        String?                                         // Category of the Food (Sandwiches, Sides, Drinks)
   tags            String[]                                        // Misc tags of the Food; useful for Searching (For example, a Cheeseburger may be tagged wiht: burgers, cheeseburger, Sandwiches, beef)
-  options         Option[]                                        // Options avaialble for food item
-  foodOpts        OptionFood[]                                    // What other Foods are options for this Food
+  menuItems       MenuItem[]                                      // What MenuItem(s) is Food part of?
+  options         Option[]                                        // Options available for Food item
+  foodOpts        OptionFood[]                                    // --> If an Option is a OptionFood (adding another Food to this Food), maintain that relationship of OptionFood:Food
+  orderItems      OrderItem[]                                     // Relation if this MenuItem is part of an Order
 }
 
 // Options for a Food
@@ -77,20 +80,23 @@ model Option {
   freeQty         Int                                                           // How many options (if multiselect/multiOrder) are free
   prepOpts        OptionPrep[]                                                  // List of Preparation options
   foodOpts        OptionFood[]                                                  // List of other Food options
+  OrderItemOption OrderItemOption[]                                             // Relation to OrderItemOption when ordered
 }
 
 // Options for a Food that are another Food
 // Example: Cheeseburger has an Option for "Toppings": Lettuce, Tomato, Pickels, Bacon, Ketchup, Mustard; Multiple can be selected or none can be selected
 // Example: Chicken sandwhich has an option for "Sauces": BBQ, Spicy
 model OptionFood {
+  id              Int             @unique @default(autoincrement())
+  @@id([optionId, foodId])
   option          Option          @relation(fields: [optionId], references: [id]) // Which Option is this FoodOption to
   optionId        Int
   food            Food            @relation(fields: [foodId], references: [id])   // Which Food does this Option provide
   foodId          Int
   price           Decimal?        @db.Money                                       // Override of Food price
-  selected        Boolean         @default(false)                                 // Is the option selected (for order)?
-  quantity        Int             @default(0)                                     // How many of the option is selected (for order)?
-  @@id([optionId, foodId])
+  selected        Boolean         @default(false)                                 // Default of is the option selected (for order)?
+  quantity        Int             @default(1)                                     // Default of how many of the option is selected (for order)?
+  orderItemOpts   OrderItemOption[]                                               // Relation to OrderItemOption if selected in an OrderItem
 }
 
 // Preparation instructions for Options
@@ -101,6 +107,73 @@ model OptionPrep {
   optionId        Int
   name            String          @db.VarChar(255)                                // Name of text text Option: Tossed in Sauce, On the side
   price           Decimal?        @db.Money                                       // Price of the option
-  selected        Boolean         @default(false)                                 // Is the option selected (for order)?
-  quantity        Int             @default(0)                                     // How many of the option is selected (for order)?
+  selected        Boolean         @default(false)                                 // Default of is the option selected (for order)?
+  quantity        Int             @default(1)                                     // Default of how many of the option is selected (for order)?
+  orderItemOpts   OrderItemOption[]                                               // Relation to OrderItemOption if selected in an OrderItem
+}
+
+// A submitted order for a customer
+// Order record itself
+model Order {
+  id              Int             @id @default(autoincrement())
+  orderNumber     Int                                                             // Generate an order number on insert - YYYYMMDD-#### (auto increment during the day on insert)
+  createdAt       DateTime        @default(now())                                 // When was the order submitted
+  complete        Boolean         @default(false)                                 // Has the order been completed/made?
+  cancelled       Boolean         @default(false)                                 // Has the order been cancelled?
+  completedAt     DateTime                                                        // When was the order completed
+  totalPrice      Decimal         @db.Money                                       // Total for the order, calculated by POS
+  paymentMethod   String                                                          // How did the customer pay? (Cash, Credit, other?)
+  orderItems      OrderItem[]                                                     // 1-n relationship - What was ordered?
+}
+
+// OrderItem
+//  Each Food in an Order gets it's own OrderItem
+//  It is expected that if a MenuItem is being ordered, each Food of the MenuItem is it's own record
+//   -> Tie the OrderItem to the MenuItem (for naming the item / keeping it together)
+//   -> Fill the .hash field with a value to GROUP BY each Food in the MenuItem
+//      -> This will be used if the same MenuItem is ordered 2+ times so that the Notes/Options/etc for the MenuItem are kept together when queried later
+model OrderItem {
+  id              Int             @id @default(autoincrement())
+  firing          Boolean         @default(false)                                // Is the OrderItem being cooked (preparation step for kitchen)
+  fired           Boolean         @default(false)                                // Is the OrderItem cooked (preparation step for kitchen)
+  ready           Boolean         @default(false)                                // Is the OrderItem cooked (preparation step for front before handing to customer)
+
+  // Which Order is this part of?
+  order           Order           @relation(fields: [orderId], references: [id]) 
+  orderId         Int
+
+  // Relation to a Food being ordered
+  food            Food            @relation(fields: [foodId], references: [id])
+  foodId          Int
+  foodNotes       String?                                                        // If the OrderItem is an individual Food, notes for the Food
+
+  // Relation to a MenuItem if this OrderItem was part of a MenuItem
+  menuItem        MenuItem?       @relation(fields: [menuItemId], references: [id])
+  menuItemId      Int?
+  menuItemhash    String?
+
+  // Optional 1:n relation to FoodOpts / PrepOpts to note selected options
+  options         OrderItemOption[]
+}
+
+// A selected option on an OrderItem
+model OrderItemOption {
+  id              Int             @id @default(autoincrement())
+  quantity        Int?                                                           // How many of the option selected?
+
+  // Which OrderItem does it belong to
+  orderItem       OrderItem       @relation(fields: [orderItemId], references: [id]) 
+  orderItemId     Int
+
+  // Which Option is this
+  option          Option          @relation(fields: [optionId], references: [id])
+  optionId        Int
+
+  // Relation to the selected OptionPrep (if applicable)
+  optionPrep      OptionPrep?     @relation(fields: [optionPrepId], references: [id])
+  optionPrepId    Int?
+
+  // Relation to the selected OptionFood (if applicable)
+  optionFood      OptionFood?     @relation(fields: [optionFoodId], references: [id])
+  optionFoodId    Int?
 }
