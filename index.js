@@ -1,11 +1,10 @@
-import { PrismaClient } from '@prisma/client'
-import express from 'express'
-import cors from 'cors'
+const { Prisma, PrismaClient } = require('@prisma/client')
+const express = require('express')
+const cors = require('cors')
 require('dotenv').config()
 
 const prisma = new PrismaClient()
 const app = express()
-var env = process.env.NODE_ENV
 
 app.use(express.json())
 
@@ -54,7 +53,7 @@ app.get('/menuItem', async (req, res) => {
     },
   }
   // Check if menuId provided and filter to selected menu
-  let menuId = req.query['menuId'] as string
+  let menuId = req.query['menuId']
   if (menuId && parseInt(menuId)) {
     query['where'] = {
       menus: {
@@ -160,6 +159,116 @@ app.get('/optionPrep', async (req, res) => {
   res.json(data)
 })
 
+// ------------------------------------------------
+// Order record APIs
+// ------------------------------------------------
+// Get all orders; optionally filter by only incomplete ones
+app.get('/order', async (req, res) => {
+  const query = {
+    where: {},
+    include: {
+      orderItems: {
+        select: {
+          id: true,
+          fired: true,
+          firing: true,
+          ready: true,
+          food: {
+            select: {
+              id: true,
+              name: true,
+              mustBeFired: true,
+              category: true,
+            },
+          },
+          foodNotes: true,
+          menuItem: {
+            select: {
+              id: true,
+              name: true,
+              category: true,
+            },
+          },
+          menuItemhash: true,
+          options: {
+            select: {
+              id: true,
+              quantity: true,
+              option: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              optionPrep: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              optionFood: {
+                select: {
+                  id: true,
+                  food: {
+                    select: {
+                      id: true,
+                      name: true,
+                      mustBeFired: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  }
+
+  // Check if complete query filter provided and add if needed
+  let complete = req.query['complete']
+  if (complete) {
+    query.where['complete'] = complete === 'true'
+  }
+
+  // Check if cancelled query filter provided and add if needed
+  let cancelled = req.query['cancelled']
+  if (cancelled) {
+    query.where['cancelled'] = cancelled === 'true'
+  }
+
+  const data = await prisma.order.findMany(query)
+  res.json(data)
+})
+
+// Allow updating an existing order
+app.patch('/order/:orderId', async function (req, res) {
+  const { orderId } = req.params
+  const patch = await prisma.order.update({
+    where: {
+      id: parseInt(orderId),
+    },
+    data: req.body,
+  })
+  res.json(patch)
+})
+
+// ------------------------------------------------
+// OrderItem record APIs
+// ------------------------------------------------
+// Allow updating an existing OrderItem
+app.patch('/orderItem/:orderItemId', async function (req, res) {
+  const { orderItemId } = req.params
+  const patch = await prisma.orderItem.update({
+    where: {
+      id: parseInt(orderItemId),
+    },
+    data: req.body,
+  })
+  res.json(patch)
+})
+
+// START THE SERVER
 const server = app.listen(process.env.PORT, () =>
   console.log(`🚀 Server ready at: http://localhost:${process.env.PORT}`)
 )
