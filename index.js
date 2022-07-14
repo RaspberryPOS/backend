@@ -173,6 +173,7 @@ app.get('/order', async (req, res) => {
           fired: true,
           firing: true,
           ready: true,
+          totalPrice: true,
           food: {
             select: {
               id: true,
@@ -194,6 +195,7 @@ app.get('/order', async (req, res) => {
             select: {
               id: true,
               quantity: true,
+              totalPrice: true,
               option: {
                 select: {
                   id: true,
@@ -251,6 +253,42 @@ app.patch('/order/:orderId', async function (req, res) {
     data: req.body,
   })
   res.json(patch)
+})
+
+app.post('/order', async (req, res) => {
+  // Get last submitted order for day to create order number
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  let orderNumber = 1
+  const lastOrder = await prisma.order.findFirst({
+    select: {
+      orderNumber: true,
+    },
+    where: {
+      createdAt: {
+        gte: today.toISOString(),
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  })
+  if (lastOrder) orderNumber = lastOrder.orderNumber + 1
+
+  // Create order record
+  const order = req.body
+  order.orderNumber = orderNumber // Set discovered order number
+  order.orderItems = { create: order.orderItems }
+  order.orderItems.create.forEach((item) => {
+    item.options = { create: item.options }
+  })
+
+  const orderRecord = await prisma.order.create({
+    data: order,
+  })
+
+  res.json(orderRecord)
+  // res.json(req.body);
 })
 
 // ------------------------------------------------

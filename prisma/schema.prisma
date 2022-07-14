@@ -120,8 +120,8 @@ model Order {
   createdAt       DateTime        @default(now())                                 // When was the order submitted
   complete        Boolean         @default(false)                                 // Has the order been completed/made?
   cancelled       Boolean         @default(false)                                 // Has the order been cancelled?
-  completedAt     DateTime                                                        // When was the order completed
-  totalPrice      Decimal         @db.Money                                       // Total for the order, calculated by POS
+  completedAt     DateTime?                                                       // When was the order completed
+  totalPrice      Decimal         @db.Money @default(0)                           // Total for the order, calculated by POS
   paymentMethod   String                                                          // How did the customer pay? (Cash, Credit, other?)
   orderItems      OrderItem[]                                                     // 1-n relationship - What was ordered?
 }
@@ -137,6 +137,7 @@ model OrderItem {
   firing          Boolean         @default(false)                                // Is the OrderItem being cooked (preparation step for kitchen)
   fired           Boolean         @default(false)                                // Is the OrderItem cooked (preparation step for kitchen)
   ready           Boolean         @default(false)                                // Is the OrderItem cooked (preparation step for front before handing to customer)
+  totalPrice      Decimal         @db.Money @default(0)                          // Total for the item, calculated by POS
 
   // Which Order is this part of?
   order           Order           @relation(fields: [orderId], references: [id]) 
@@ -160,6 +161,7 @@ model OrderItem {
 model OrderItemOption {
   id              Int             @id @default(autoincrement())
   quantity        Int?                                                           // How many of the option selected?
+  totalPrice      Decimal         @db.Money @default(0)                          // Total for the option, calculated by POS
 
   // Which OrderItem does it belong to
   orderItem       OrderItem       @relation(fields: [orderItemId], references: [id]) 
