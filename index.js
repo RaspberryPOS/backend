@@ -1,13 +1,29 @@
 const { Prisma, PrismaClient } = require('@prisma/client')
+const http = require('http')
 const express = require('express')
+const faye = require('faye') // For pub/sub system for event notification
 const cors = require('cors')
 require('dotenv').config()
+const fayeMount = '/faye'
 
+// Database connection with Prisma
 const prisma = new PrismaClient()
-const app = express()
 
+// Express API
+const app = express()
 app.use(express.json())
 
+// Faye pubsub system
+const server = http.createServer(app)
+const bayeux = new faye.NodeAdapter({ mount: fayeMount, timeout: 45 })
+
+// Log errors
+app.use(function (err, req, res, next) {
+  console.error(err.stack)
+  res.send(500)
+})
+
+// Setup if in dev
 if (process.env.NODE_ENV === 'development') {
   console.log(`🛠️  DEVELOPMENT Mode detected, enabled CORS policy *`)
   app.use(
@@ -171,7 +187,9 @@ app.get('/order', async (req, res) => {
         select: {
           id: true,
           fired: true,
+          firedTime: true,
           firing: true,
+          firingTime: true,
           ready: true,
           totalPrice: true,
           food: {
@@ -252,6 +270,10 @@ app.patch('/order/:orderId', async function (req, res) {
     },
     data: req.body,
   })
+
+  // Publish patch change over Faye
+  bayeux.getClient().publish('/order/patch', JSON.parse(JSON.stringify(patch)))
+
   res.json(patch)
 })
 
@@ -307,6 +329,7 @@ app.patch('/orderItem/:orderItemId', async function (req, res) {
 })
 
 // START THE SERVER
-const server = app.listen(process.env.PORT, () =>
+bayeux.attach(server)
+server.listen(process.env.PORT, () =>
   console.log(`🚀 Server ready at: http://localhost:${process.env.PORT}`)
 )
