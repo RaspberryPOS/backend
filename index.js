@@ -178,64 +178,58 @@ app.get('/optionPrep', async (req, res) => {
 // ------------------------------------------------
 // Order record APIs
 // ------------------------------------------------
-// Get all orders; optionally filter by only incomplete ones
-app.get('/order', async (req, res) => {
-  const query = {
-    where: {},
-    include: {
-      orderItems: {
+const orderInclude = {
+  orderItems: {
+    select: {
+      id: true,
+      fired: true,
+      firedTime: true,
+      firing: true,
+      firingTime: true,
+      ready: true,
+      totalPrice: true,
+      food: {
         select: {
           id: true,
-          fired: true,
-          firedTime: true,
-          firing: true,
-          firingTime: true,
-          ready: true,
+          name: true,
+          mustBeFired: true,
+          category: true,
+        },
+      },
+      foodNotes: true,
+      menuItem: {
+        select: {
+          id: true,
+          name: true,
+          category: true,
+        },
+      },
+      menuItemhash: true,
+      options: {
+        select: {
+          id: true,
+          quantity: true,
           totalPrice: true,
-          food: {
+          option: {
             select: {
               id: true,
               name: true,
-              mustBeFired: true,
-              category: true,
             },
           },
-          foodNotes: true,
-          menuItem: {
+          optionPrep: {
             select: {
               id: true,
               name: true,
-              category: true,
             },
           },
-          menuItemhash: true,
-          options: {
+          optionFood: {
             select: {
               id: true,
-              quantity: true,
-              totalPrice: true,
-              option: {
+              food: {
                 select: {
                   id: true,
                   name: true,
-                },
-              },
-              optionPrep: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              optionFood: {
-                select: {
-                  id: true,
-                  food: {
-                    select: {
-                      id: true,
-                      name: true,
-                      mustBeFired: true,
-                    },
-                  },
+                  mustBeFired: true,
                 },
               },
             },
@@ -243,6 +237,14 @@ app.get('/order', async (req, res) => {
         },
       },
     },
+  },
+}
+
+// Get all orders; optionally filter by only incomplete ones
+app.get('/order', async (req, res) => {
+  const query = {
+    where: {},
+    include: orderInclude,
   }
 
   // Check if complete query filter provided and add if needed
@@ -307,10 +309,15 @@ app.post('/order', async (req, res) => {
 
   const orderRecord = await prisma.order.create({
     data: order,
+    include: orderInclude,
   })
 
+  // Publish patch change over Faye
+  bayeux
+    .getClient()
+    .publish('/order/post', JSON.parse(JSON.stringify(orderRecord)))
+
   res.json(orderRecord)
-  // res.json(req.body);
 })
 
 // ------------------------------------------------
@@ -325,6 +332,12 @@ app.patch('/orderItem/:orderItemId', async function (req, res) {
     },
     data: req.body,
   })
+
+  // Publish patch change over Faye
+  bayeux
+    .getClient()
+    .publish('/orderItem/patch', JSON.parse(JSON.stringify(patch)))
+
   res.json(patch)
 })
 
