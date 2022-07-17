@@ -135,7 +135,9 @@ model Order {
 model OrderItem {
   id              Int             @id @default(autoincrement())
   firing          Boolean         @default(false)                                // Is the OrderItem being cooked (preparation step for kitchen)
+  firingTime      DateTime?                                                      // When did the OrderItem begin firing?
   fired           Boolean         @default(false)                                // Is the OrderItem cooked (preparation step for kitchen)
+  firedTime       DateTime?                                                      // When did the OrderItem finish firing?
   ready           Boolean         @default(false)                                // Is the OrderItem cooked (preparation step for front before handing to customer)
   totalPrice      Decimal         @db.Money @default(0)                          // Total for the item, calculated by POS
 
