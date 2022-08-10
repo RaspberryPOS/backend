@@ -251,10 +251,10 @@
   resolved "https://registry.npmjs.org/@prisma/engines-version/-/engines-version-3.16.0-49.da41d2bb3406da22087b849f0e911199ba4fbf11.tgz"
   integrity sha512-PiZhdD624SrYEjyLboI0X7OugNbxUzDJx9v/6ldTKuqNDVUCmRH/Z00XwDi/dgM4FlqOSO+YiUsSiSKjxxG8cw==
 
-"@prisma/engines@3.16.0-49.da41d2bb3406da22087b849f0e911199ba4fbf11":
-  version "3.16.0-49.da41d2bb3406da22087b849f0e911199ba4fbf11"
-  resolved "https://registry.npmjs.org/@prisma/engines/-/engines-3.16.0-49.da41d2bb3406da22087b849f0e911199ba4fbf11.tgz"
-  integrity sha512-u/rG4lDHALolWBLr3yebZ+N2qImp3SDMcu7bHNJuRDaYvYEXy/MqfNRNEgd9GoPsXL3gofYf0VzJf2AmCG3YVw==
+"@prisma/engines@4.2.0":
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/@prisma/engines/-/engines-4.2.0.tgz#e209bf1cbdc8b6a84f5a44d075204914e23ecd46"
+  integrity sha512-tefRwCVDwLqk0WrBLErYR26uKKxzLSlKvRyADFiQn/fizJhqk9nxMXH8F6SE4w6r/szUQTzIJ4vheJKQ4dYKpw==
 
 "@sindresorhus/is@^0.14.0":
   version "0.14.0"
@@ -2391,12 +2391,12 @@ prettier@^2.5.1:
   resolved "https://registry.npmjs.org/prettier/-/prettier-2.7.1.tgz"
   integrity sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==
 
-prisma@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.npmjs.org/prisma/-/prisma-4.0.0.tgz"
-  integrity sha512-Dtsar03XpCBkcEb2ooGWO/WcgblDTLzGhPcustbehwlFXuTMliMDRzXsfygsgYwQoZnAUKRd1rhpvBNEUziOVw==
+prisma@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/prisma/-/prisma-4.2.0.tgz#c54be904f8a91ce2aaca9b14dfe74ed2c9722929"
+  integrity sha512-EswC2+mFi2oKQ/IDVkokDxwAsuiuYH4gKGkNNMAQ+86f3qwOo4tiVubCRxrQp5d61F+Yf+30f8Sv0zwWMnj0XQ==
   dependencies:
-    "@prisma/engines" "3.16.0-49.da41d2bb3406da22087b849f0e911199ba4fbf11"
+    "@prisma/engines" "4.2.0"
 
 proxy-addr@~2.0.7:
   version "2.0.7"
